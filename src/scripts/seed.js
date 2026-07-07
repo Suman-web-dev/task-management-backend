@@ -24,27 +24,25 @@ const seedData = async () => {
     console.log('Cleared existing data');
 
     // Create admin user
-    const adminPassword = await bcrypt.hash('admin123', 10);
     const admin = await User.create({
       name: 'Admin User',
       email: 'admin@example.com',
-      password: adminPassword,
+      password: 'admin123',
       role: 'admin',
     });
     console.log('Created admin user:', admin.email);
 
     // Create customer users
-    const customerPassword = await bcrypt.hash('customer123', 10);
     const customer1 = await User.create({
       name: 'John Doe',
       email: 'john@example.com',
-      password: customerPassword,
+      password: 'customer123',
       role: 'customer',
     });
     const customer2 = await User.create({
       name: 'Jane Smith',
       email: 'jane@example.com',
-      password: customerPassword,
+      password: 'customer123',
       role: 'customer',
     });
     console.log('Created customer users');
