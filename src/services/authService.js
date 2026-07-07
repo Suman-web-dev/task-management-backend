@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const BlacklistedToken = require('../models/BlacklistedToken');
 const config = require('../config');
 
 const generateTokens = (userId) => {
@@ -119,7 +120,7 @@ const refreshToken = async (token) => {
   }
 };
 
-const logout = async (userId, refreshToken) => {
+const logout = async (userId, refreshToken, accessToken) => {
   const user = await User.findById(userId);
   if (!user) {
     const error = new Error('User not found');
@@ -129,11 +130,23 @@ const logout = async (userId, refreshToken) => {
     throw error;
   }
 
+  // Remove refresh token
   await user.removeRefreshToken(refreshToken);
+
+  // Blacklist access token
+  const decoded = jwt.decode(accessToken);
+  const expiresAt = new Date(decoded.exp * 1000);
+  
+  await BlacklistedToken.create({
+    token: accessToken,
+    userId: userId,
+    expiresAt,
+  });
+
   return { message: 'Logged out successfully' };
 };
 
-const logoutAll = async (userId) => {
+const logoutAll = async (userId, accessToken) => {
   const user = await User.findById(userId);
   if (!user) {
     const error = new Error('User not found');
@@ -143,7 +156,19 @@ const logoutAll = async (userId) => {
     throw error;
   }
 
+  // Clear all refresh tokens
   await user.clearRefreshTokens();
+
+  // Blacklist current access token
+  const decoded = jwt.decode(accessToken);
+  const expiresAt = new Date(decoded.exp * 1000);
+  
+  await BlacklistedToken.create({
+    token: accessToken,
+    userId: userId,
+    expiresAt,
+  });
+
   return { message: 'Logged out from all devices' };
 };
 

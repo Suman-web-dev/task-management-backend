@@ -45,7 +45,8 @@ const refreshToken = async (req, res, next) => {
 const logout = async (req, res, next) => {
   try {
     const { refreshToken } = req.body;
-    const result = await authService.logout(req.user._id, refreshToken);
+    const accessToken = req.headers.authorization?.substring(7);
+    const result = await authService.logout(req.user._id, refreshToken, accessToken);
     res.status(200).json({
       success: true,
       message: result.message,
@@ -58,7 +59,8 @@ const logout = async (req, res, next) => {
 
 const logoutAll = async (req, res, next) => {
   try {
-    const result = await authService.logoutAll(req.user._id);
+    const accessToken = req.headers.authorization?.substring(7);
+    const result = await authService.logoutAll(req.user._id, accessToken);
     res.status(200).json({
       success: true,
       message: result.message,

@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const BlacklistedToken = require('../models/BlacklistedToken');
 const config = require('../config');
 
 class CustomError extends Error {
@@ -19,6 +20,13 @@ const authenticate = async (req, res, next) => {
     }
 
     const token = authHeader.substring(7);
+    
+    // Check if token is blacklisted
+    const isBlacklisted = await BlacklistedToken.findOne({ token });
+    if (isBlacklisted) {
+      throw new CustomError('Token has been revoked', 401);
+    }
+    
     const decoded = jwt.verify(token, config.jwt.accessSecret);
     
     const user = await User.findById(decoded.id).select('-password');
@@ -27,6 +35,7 @@ const authenticate = async (req, res, next) => {
     }
 
     req.user = user;
+    req.token = token;
     next();
   } catch (error) {
     next(error);
